@@ -182,3 +182,8 @@ wandb/
 swanlog/
 generated_predictions.jsonl
 predictions_score.json
+
+# 本地数据和模型目录
+llm_models/
+data/chatts/
+data/chatts_tune/

@@ -38,5 +38,13 @@
             "response": "output",
             "timeseries": "timeseries"
         }
+    },
+    "chatts_tune": {
+        "file_name": "chatts_tune/train.jsonl",
+        "columns": {
+            "prompt": "input",
+            "response": "output",
+            "timeseries": "timeseries"
+        }
     }
 }
