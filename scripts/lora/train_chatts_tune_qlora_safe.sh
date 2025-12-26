@@ -7,10 +7,10 @@ export DEEPSPEED_TIMEOUT=120
 # Configuration
 MODEL_PATH="llm_models/ChatTS-14B"
 DATASET="chatts_tune"
-OUTPUT_DIR="saves/chatts-14b/qlora/gdsh_tune"
+OUTPUT_DIR="saves/chatts-14b/lora/2080Ti_tune_qlora_safe_20251226"
 
 # Run training (Single GPU QLoRA with aggressive RAM saving)
-torchrun --nproc_per_node=1 src/train.py \
+torchrun --nproc_per_node=2 src/train.py \
     --stage sft \
     --model_name_or_path "${MODEL_PATH}" \
     --dataset "${DATASET}" \
@@ -26,7 +26,7 @@ torchrun --nproc_per_node=1 src/train.py \
     --output_dir "${OUTPUT_DIR}" \
     --overwrite_output_dir \
     --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 16 \
+    --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
     --logging_steps 1 \
     --save_steps 50 \

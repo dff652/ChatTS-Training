@@ -53,22 +53,99 @@
 ### 第三阶段：训练环境配置
 **目标**: 创建可复现的训练脚本。
 
-*   **脚本路径**: `scripts/lora/train_chatts_tune.sh`
+*   **脚本路径**: `scripts/lora/train_chatts_tune_qlora_safe.sh` (推荐用于 RTX 2080Ti)
 *   **配置概览**:
     *   基座模型: `llm_models/ChatTS-14B`
     *   数据集: `chatts_tune`
-    *   微调方法: LoRA (Low-Rank Adaptation)
-    *   输出目录: `saves/chatts-14b/lora/gdsh_tune`
-    *   其他参数: 根据显存情况调整 batch size 和 gradient accumulation。
+    *   微调方法: QLoRA (4-bit 量化 + LoRA)
+    *   输出目录: `saves/chatts-14b/qlora/2080Ti_tune_20251226`
+    *   其他参数: batch_size=1, gradient_accumulation=16, epochs=3
+
+**执行命令**:
+```bash
+# 1. 激活环境
+conda activate chatts_train_env
+
+# 2. 启动训练（前台运行）
+bash scripts/lora/train_chatts_tune_qlora_safe.sh
+```
+
+### 微调脚本对比
+
+| 脚本 | 训练框架 | 量化 | 显存需求 | 适用显卡 |
+|-----|---------|------|---------|---------|
+| `train_chatts_tune_qlora_safe.sh` | torchrun | 4-bit | ~10GB | RTX 2080Ti ✅ |
+| `train_chatts_tune_simple.sh` | LlamaFactory CLI | 4-bit | ~10GB | RTX 2080Ti |
+| `train_chatts_tune_qlora.sh` | LlamaFactory CLI | 4-bit | ~12GB | RTX 3060+ |
+| `train_chatts_tune.sh` | DeepSpeed | 无 (FP16) | ~20GB+ | RTX 3090/A100 |
+
+**关键区别**:
+- **QLoRA 版本**: 使用 4-bit 量化，显存占用低，适合消费级显卡
+- **无量化版本**: FP16 全精度，需要专业级显卡，但训练精度更高
+- **DeepSpeed**: 支持 CPU Offload，可进一步降低显存压力
+
+---
+
+### 训练步数计算
+
+**公式**:
+```
+总步数 = (样本数 / batch_size / gradient_accumulation_steps) × num_train_epochs
+```
+
+**参数说明**:
+| 参数 | 含义 | 当前值 |
+|-----|------|-------|
+| 样本数 | 训练数据总条数 | 417 |
+| batch_size | 每次前向传播处理的样本数 | 1 |
+| gradient_accumulation_steps | 累积多少次梯度后更新权重 | 16 |
+| num_train_epochs | 遍历完整数据集的轮数 | 3 |
+
+**当前配置计算**:
+```
+每 epoch 步数 = 417 / 1 / 16 ≈ 26 步
+总步数 = 26 × 3 = 78 步
+```
+
+**为什么用梯度累积?**
+- 显存有限时，通过多次小 batch 累积梯度，模拟大 batch 训练效果
+- `batch_size=1 × 16次累积 = 等效 batch_size=16`
+
+---
+
+### num_train_epochs vs max_steps
+
+| 参数 | 含义 | 优先级 |
+|-----|------|-------|
+| `num_train_epochs` | 遍历整个数据集的次数 | 低 |
+| `max_steps` | 最大训练步数 | 高 |
+
+> 如果两者都设置，`max_steps` 优先，达到后停止训练。
+
+---
+
+### 使用建议
+
+| 显卡 | 显存 | 推荐脚本 | 备注 |
+|-----|------|---------|------|
+| RTX 2080Ti | 11GB | `train_chatts_tune_qlora_safe.sh` | 必须用 4-bit 量化 |
+| RTX 3090 | 24GB | `train_chatts_tune.sh` | 可用 FP16 全精度 |
+| A100 | 40GB+ | `train_chatts_tune.sh` | 可加大 batch_size |
+
+**训练时间预估** (RTX 2080Ti, 78步):
+- QLoRA: 约 30-60 分钟
+
+---
 
 ## 4. 任务清单
 
-- [ ] **数据准备**: 编写并运行 `scripts/preprocess_gdsh.py`。
-- [ ] **数据验证**: 检查生成的 `data/chatts_tune/train.jsonl` 格式是否正确。
-- [ ] **配置更新**: 修改 `data/dataset_info.json`。
-- [ ] **脚本编写**: 创建 `scripts/lora/train_chatts_tune.sh`。
-- [ ] **执行训练**: 启动训练并监控 Loss。
+- [x] **数据准备**: 运行 `scripts/preprocess_tune_data.py` 生成训练数据
+- [x] **数据验证**: 检查 `data/chatts_tune/train.jsonl` 格式 (417条记录)
+- [x] **配置更新**: 修改 `data/dataset_info.json`
+- [x] **脚本编写**: 创建训练脚本
+- [ ] **执行训练**: 启动训练并监控 Loss
 
 ## 5. 备注
-*   **路径映射**: JSON 中的 `image` 字段包含不存在的绝对路径 `/home/wyx/...`，脚本必须通过文件名匹配来定位本地 CSV 文件。
-*   **序列长度**: 原始 CSV 数据长度可能约为 5000 点，而 ChatTS 示例数据约为 256 点。模型 (Qwen2 基础) 支持长上下文，但过长的时序数据可能会导致显存溢出或性能下降。如果训练中遇到 OOM (Out of Memory)，可能需要对数据进行下采样 (Downsampling) 或切片。我们将首先尝试原始长度或简单的下采样。
+*   **路径映射**: JSON 中的 `image` 字段包含不存在的绝对路径，脚本通过文件名匹配定位本地 CSV 文件。
+*   **序列长度**: 原始 CSV 数据长度约 5000 点，模型支持长上下文，但可能增加显存消耗。
+*   **数据集选择**: 由 `data/dataset_info.json` 中的 `file_name` 字段决定使用哪个 JSONL 文件。
