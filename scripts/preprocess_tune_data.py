@@ -9,11 +9,12 @@ def preprocess_chatts_tune(base_dir, output_path):
     
     # Mapping JSON files to their TS directories
     # Mapping based on observation:
+    # 使用合并后的 JSON 文件（每个点位一条记录，包含所有异常）
     dataset_mapping = {
-        "gdsh.json": "gdsh",
-        "hbsn.json": "hbsn",
-        "whlj_ljsj.json": "whlj",
-        "zhlh.json": "zhlh"
+        "gdsh_merged.json": "gdsh",
+        "hbsn_merged.json": "hbsn",
+        "whlj_ljsj_merged.json": "whlj",
+        "zhlh.json": "zhlh"  # zhlh 本身就是每点位一条记录的格式
     }
     
     processed_data = []
@@ -70,13 +71,30 @@ def preprocess_chatts_tune(base_dir, output_path):
                 # JSON: NB.LJSJ.PT_2A234C.PV.jpg -> Disk: 数据集whlj_ljsj_NB.LJSJ.PT_2A234C.PV.csv
                 potential_filenames.append("数据集whlj_ljsj_" + csv_name_from_json)
             
-            # Check existence
+            # Check existence in current ts_dir
             target_path = None
             for fname in potential_filenames:
                 p = os.path.join(ts_dir, fname)
                 if os.path.exists(p):
                     target_path = p
                     break
+            
+            # 智能识别: 如果在 gdsh 目录找不到,且是 NB.LJSJ 点位,则尝试在 whlj 目录查找
+            if not target_path and ts_subdir == "gdsh" and "NB.LJSJ" in csv_name_from_json:
+                whlj_dir = os.path.join(ts_root_dir, "whlj")
+                whlj_filename = "数据集whlj_ljsj_" + csv_name_from_json
+                whlj_path = os.path.join(whlj_dir, whlj_filename)
+                if os.path.exists(whlj_path):
+                    target_path = whlj_path
+            
+            # 智能识别: 如果在 gdsh 目录找不到,且是 hbsn 格式 (gdsh_second_AT_xxx),则尝试在 hbsn 目录查找
+            if not target_path and ts_subdir == "gdsh" and csv_name_from_json.startswith("gdsh_second_"):
+                hbsn_dir = os.path.join(ts_root_dir, "hbsn")
+                # hbsn 目录文件格式: AT_032143.PV.csv (去掉 gdsh_second_ 前缀)
+                hbsn_filename = csv_name_from_json.replace("gdsh_second_", "")
+                hbsn_path = os.path.join(hbsn_dir, hbsn_filename)
+                if os.path.exists(hbsn_path):
+                    target_path = hbsn_path
             
             if not target_path:
                 missing_files.append(csv_name_from_json)
