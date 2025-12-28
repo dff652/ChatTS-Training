@@ -50,6 +50,8 @@ def run_sft(
     tokenizer = tokenizer_module["tokenizer"]
     template = get_template_and_fix_tokenizer(tokenizer, data_args)
     dataset_module = get_dataset(template, model_args, data_args, training_args, stage="sft", **tokenizer_module)
+    if "train_dataset" in dataset_module:
+        logger.info(f"Train dataset length: {len(dataset_module['train_dataset'])}")
     model = load_model(tokenizer, model_args, finetuning_args, training_args.do_train)
 
     if getattr(model, "is_quantized", False) and not training_args.do_train:
@@ -94,7 +96,9 @@ def run_sft(
 
     # Training
     if training_args.do_train:
+        logger.info("Starting training...")
         train_result = trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
+        logger.info("Training finished.")
         if finetuning_args.timeseries_sft_lr is not None:
             ts_lr = get_timeseries_learning_rate(getattr(trainer, "optimizer", None))
             if ts_lr is not None:
