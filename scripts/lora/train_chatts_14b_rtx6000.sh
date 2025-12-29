@@ -15,7 +15,7 @@ torchrun --nproc_per_node=2 --master_port=19901 src/train.py \
     --finetuning_type lora \
     --lora_target q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj \
     --lora_rank 16 \
-    --output_dir saves/chatts-14b/lora/rtx6000_tune \
+    --output_dir "saves/chatts-14b/lora/rtx6000_tune_$(date +%Y%m%d)" \
     --overwrite_output_dir \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 16 \

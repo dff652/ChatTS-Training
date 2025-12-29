@@ -7,9 +7,9 @@ from openpyxl.drawing.image import Image
 # Configuration
 # Since the previous file was renamed to res_tune.xlsx, we use that as input
 excel_path = '/home/share/results/res_images_template.xlsx' 
-image_dir = '/home/share/results/figs/global/combined/adtk_hbos_vs_chatts_8b_2080ti_detail_range_only'
+image_dir = '/home/share/results/figs/global/combined/adtk_hbos_vs_chatts_8b_rtx6000_detail_range_only'
 # Save to a new file or overwrite
-output_path = '/home/share/results/res_images_detail_range_only_8b_2080ti.xlsx'
+output_path = '/home/share/results/res_images_detail_range_only_8b_rtx6000.xlsx'
 
 def insert_images():
     # 1. Map point names to image filenames

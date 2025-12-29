@@ -3,15 +3,16 @@
 # Environment variables
 export NCCL_DEBUG=WARN 
 export DEEPSPEED_TIMEOUT=120
+export CUDA_VISIBLE_DEVICES=1
 
 # Configuration
-MODEL_PATH="/home/data1/llm_models/bytedance-research/ChatTS-8B"
+MODEL_PATH="/home/share/llm_models/bytedance-research/ChatTS-8B"
 DATASET="chatts_tune"
-OUTPUT_DIR="saves/chatts-8b/lora/gdsh_tune_no_offload"
+OUTPUT_DIR="saves/chatts-8b/lora/RTX6000_tune_no_offload"
 
 # Run training (Dual GPU DeepSpeed ZeRO-3 WITHOUT Offload)
 # This avoids the CUDA version mismatch error since it doesn't need to compile CPUAdam.
-torchrun --nproc_per_node=2 src/train.py \
+torchrun --nproc_per_node=1 src/train.py \
     --deepspeed ds_config/ds_config_3.json \
     --stage sft \
     --model_name_or_path "${MODEL_PATH}" \
