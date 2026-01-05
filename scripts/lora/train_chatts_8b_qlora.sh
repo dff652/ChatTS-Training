@@ -7,7 +7,7 @@ export DEEPSPEED_TIMEOUT=120
 # Configuration
 MODEL_PATH="/home/data1/llm_models/bytedance-research/ChatTS-8B"
 DATASET="chatts_tune"
-OUTPUT_DIR="saves/chatts-8b/qlora/gdsh_tune"
+OUTPUT_DIR="saves/chatts-8b/qlora/2080Ti_tune_qlora_${TIMESTAMP}"
 
 # Run training (Dual GPU QLoRA)
 torchrun --nproc_per_node=2 src/train.py \

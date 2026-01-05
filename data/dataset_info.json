@@ -40,7 +40,7 @@
         }
     },
     "chatts_tune": {
-        "file_name": "chatts_tune_1024/gdsh_hbsn_whlj_data.jsonl",
+        "file_name": "chatts_tune/train_1_split.jsonl",
         "columns": {
             "prompt": "input",
             "response": "output",

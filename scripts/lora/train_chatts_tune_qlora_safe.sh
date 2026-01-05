@@ -7,7 +7,9 @@ export DEEPSPEED_TIMEOUT=120
 # Configuration
 MODEL_PATH="llm_models/ChatTS-14B"
 DATASET="chatts_tune"
-OUTPUT_DIR="saves/chatts-14b/lora/2080Ti_tune_qlora_safe_20251226"
+# 动态生成带时间戳的输出目录
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+OUTPUT_DIR="saves/chatts-14b/lora/2080Ti_tune_qlora_safe_${TIMESTAMP}"
 
 # Run training (Single GPU QLoRA with aggressive RAM saving)
 torchrun --nproc_per_node=2 src/train.py \
