@@ -7,9 +7,9 @@ from openpyxl.drawing.image import Image
 # Configuration
 # Since the previous file was renamed to res_tune.xlsx, we use that as input
 excel_path = '/home/share/results/res_images_template.xlsx' 
-image_dir = '/home/share/results/figs/global/combined/adtk_hbos_vs_chatts_8b_rtx6000_detail_range_only'
+image_dir = '/home/share/results/figs/global/combined/adtk_hbos_vs_chatts_8b_1024_split'
 # Save to a new file or overwrite
-output_path = '/home/share/results/res_images_detail_range_only_8b_rtx6000.xlsx'
+output_path = '/home/share/results/res_images_8b_1024_split.xlsx'
 
 def insert_images():
     # 1. Map point names to image filenames
@@ -29,17 +29,21 @@ def insert_images():
         if not f.endswith('.png'):
             continue
         
-        # Regex strategy 1: Standard generated format
+        # Regex strategy 1: Standard generated format (e.g., 1066_global_mask_3593591_FI_11201.PV_adtk_hbos1062_chatts4.png)
         match = re.search(r'_(\d+)_([A-Za-z0-9_\-\.]+)_adtk_hbos', f)
         if match:
             point_name = match.group(2)
             point_to_image[point_name] = f
-        else:
-            # Regex strategy 2: Fallback for different naming conventions
+        # Regex strategy 2: Fallback for different naming conventions
+        elif re.search(r'mask_\d+_([A-Za-z0-9_\-\.]+)_adtk', f):
             match2 = re.search(r'mask_\d+_([A-Za-z0-9_\-\.]+)_adtk', f)
-            if match2:
-                point_name = match2.group(1)
-                point_to_image[point_name] = f
+            point_name = match2.group(1)
+            point_to_image[point_name] = f
+        # Regex strategy 3: Simple naming format (e.g., FI_11201.PV.png)
+        else:
+            # Assume the filename (without .png) is the point name
+            point_name = f[:-4]  # Remove .png extension
+            point_to_image[point_name] = f
 
     print(f"Mapped {len(point_to_image)} images to points.")
 

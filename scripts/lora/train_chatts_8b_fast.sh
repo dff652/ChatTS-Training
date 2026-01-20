@@ -9,9 +9,9 @@ export DEEPSPEED_TIMEOUT=120
 export CUDA_VISIBLE_DEVICES=0,1
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 # Configuration
-MODEL_PATH="/home/data1/llm_models/bytedance-research/ChatTS-8B"
-DATASET="chatts_tune"
-OUTPUT_DIR="saves/chatts-8b/lora/RTX6000_tune_no_offload_${TIMESTAMP}"
+MODEL_PATH="/home/share/llm_models/bytedance-research/ChatTS-8B"
+DATASET="chatts_tune_1024_split"
+OUTPUT_DIR="saves/chatts-8b/lora/RTX6000_tune_1024_no_offload_${TIMESTAMP}"
 
 # Run training (Dual GPU DeepSpeed ZeRO-3 WITHOUT Offload)
 # This avoids the CUDA version mismatch error since it doesn't need to compile CPUAdam.

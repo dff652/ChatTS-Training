@@ -186,4 +186,7 @@ predictions_score.json
 # 本地数据和模型目录
 llm_models/
 data/chatts/
-data/chatts_tune/
+data/chatts_tune_5000/
+data/chatts_tune_1024_split/
+data/chatts_tune_5000_split/
+
