@@ -62,6 +62,10 @@ def is_gradio_available():
     return _is_package_available("gradio")
 
 
+def is_jieba_available():
+    return _is_package_available("jieba")
+
+
 def is_matplotlib_available():
     return _is_package_available("matplotlib")
 

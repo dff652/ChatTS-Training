@@ -1531,6 +1531,47 @@ class Qwen2VLPlugin(BasePlugin):
 
 
 @dataclass
+class Qwen3VLPlugin(Qwen2VLPlugin):
+    r"""Qwen3-VL image plugin for the ChatTS training workload.
+
+    Qwen3-VL image preprocessing is supplied by its Transformers processor and
+    is compatible with the Qwen2-VL message expansion contract. Video metadata
+    handling differs and is deliberately rejected until the complete upstream
+    video implementation is backported.
+    """
+
+    @staticmethod
+    def _reject_videos(videos: list["VideoInput"]) -> None:
+        if videos:
+            raise ValueError(
+                "Qwen3-VL video training is not supported by this image-only backport."
+            )
+
+    @override
+    def _get_mm_inputs(
+        self,
+        images: list["ImageInput"],
+        videos: list["VideoInput"],
+        audios: list["AudioInput"],
+        processor: "MMProcessor",
+    ) -> dict[str, "torch.Tensor"]:
+        self._reject_videos(videos)
+        return super()._get_mm_inputs(images, videos, audios, processor)
+
+    @override
+    def process_messages(
+        self,
+        messages: list[dict[str, str]],
+        images: list["ImageInput"],
+        videos: list["VideoInput"],
+        audios: list["AudioInput"],
+        processor: Optional["MMProcessor"],
+    ) -> list[dict[str, str]]:
+        self._reject_videos(videos)
+        return super().process_messages(messages, images, videos, audios, processor)
+
+
+@dataclass
 class GLM4VPlugin(Qwen2VLPlugin):
     @override
     def _get_mm_inputs(
@@ -1926,6 +1967,7 @@ PLUGINS = {
     "qwen2_audio": Qwen2AudioPlugin,
     "qwen2_omni": Qwen2OmniPlugin,
     "qwen2_vl": Qwen2VLPlugin,
+    "qwen3_vl": Qwen3VLPlugin,
     "video_llava": VideoLlavaPlugin,
     "chatts": ChatTSPlugin,
     "qwen3ts": ChatTSPlugin
